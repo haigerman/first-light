@@ -31,7 +31,7 @@ import kotlin.math.exp
  *     L(x) = (e^(k·x) − 1) / (e^k − 1),   x = vergangene Zeit / Länge des Stücks ∈ [0, 1]
  *
  * Die „− 1“ sorgt dafür, dass genau bei 0 % begonnen und genau bei 100 % geendet wird.
- * Mit k = [RAMP_STEEPNESS] = 4 ist es bei einem 2:32-Stück nach 1 Minute erst ca. 7 %,
+ * Mit k = [RAMP_STEEPNESS] = 3 ist es bei einem 2:32-Stück nach 1 Minute erst ca. 12 %,
  * danach steigt die Lautstärke immer schneller.
  * Danach läuft das Stück in Schleife weiter und bleibt bei 100 %.
  * Die Lautstärke wird alle [TICK_MS] nachgeführt, damit keine Stufen hörbar sind.
@@ -45,7 +45,7 @@ class AlarmService : Service() {
         const val FALLBACK_RAMP_MS = 150_000L
         private const val MIN_RAMP_MS = 30_000L
         /** Steilheit k der Exponentialkurve: größer = länger leise, am Ende steiler. */
-        const val RAMP_STEEPNESS = 4.0
+        const val RAMP_STEEPNESS = 3.0
         private const val TICK_MS = 100L
         private const val CHANNEL_ID = "alarm"
         private const val NOTIFICATION_ID = 42

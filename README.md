@@ -7,7 +7,7 @@ Android-Wecker-App, die zur eingestellten Zeit ein Musikstück abspielt und die 
 ## Funktionen
 
 - **Weckzeit** im 24-Stunden-Format, einmalig oder täglich wiederholt
-- **Sanfter Lautstärkeanstieg:** exponentiell (Basis e) von 0 % auf 100 % über die Länge des Musikstücks (Standardstück: 2:32) – erst ganz langsam (nach 1 Minute ca. 7 %), dann immer schneller; danach in Schleife bei 100 %
+- **Sanfter Lautstärkeanstieg:** exponentiell (Basis e) von 0 % auf 100 % über die Länge des Musikstücks (Standardstück: 2:32) – erst ganz langsam (nach 1 Minute ca. 12 %), dann immer schneller; danach in Schleife bei 100 %
 - **Eigenes Musikstück** (beliebige Audiodatei), sonst das mitgelieferte Stück „First Light on the Water“
 - **Persönliche Begrüßung:** „Guten Morgen, ‹Name› ☀️“ bzw. „Guten Morgen!“ ohne Namen
 - **Weckbildschirm über dem Sperrbildschirm** mit
