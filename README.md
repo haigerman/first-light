@@ -85,13 +85,15 @@ Die Lautstärke-Parameter stehen als Konstanten in `AlarmService.kt` (`FALLBACK_
 
 ## Neue Version veröffentlichen
 
-Jeder Tag im Format `vX.Y.Z` startet den Workflow `.github/workflows/release.yml`. Er baut eine signierte APK und veröffentlicht sie als GitHub Release:
+Die Versionsnummer steht in der Datei `VERSION` (Format `X.Y.Z`). Wird sie auf `main` geändert, startet der Workflow `.github/workflows/release.yml`: Er baut eine signierte APK, legt den Tag `vX.Y.Z` an und veröffentlicht ein GitHub Release.
 
 ```bash
-git tag v1.0.1
-git push origin v1.0.1
+echo "1.0.1" > VERSION
+git commit -am "Version 1.0.1"
+git push
 ```
 
-Die Versionsnummer der App wird aus dem Tag abgeleitet (`v1.2.3` → versionName `1.2.3`, versionCode `10203`).
+Alternativ lässt sich der Workflow unter **Actions → Release → Run workflow** manuell starten.
+Aus der Version wird auch die interne Versionsnummer abgeleitet (`1.2.3` → versionCode `10203`); sie muss bei jedem Release steigen.
 
 Zum Signieren braucht das Repo diese Actions-Secrets: `SIGNING_KEYSTORE_BASE64`, `SIGNING_KEYSTORE_PASSWORD`, `SIGNING_KEY_ALIAS`, `SIGNING_KEY_PASSWORD`. Der Schlüssel selbst gehört **nie** ins Repository.

@@ -1,11 +1,15 @@
-# Baut bei jedem Versions-Tag (z. B. v1.0.0) eine signierte APK und
-# veröffentlicht sie als GitHub Release – dort findet Obtainium die Updates.
+# Baut eine signierte APK und veröffentlicht sie als GitHub Release
+# (Tag vX.Y.Z wird dabei automatisch angelegt) – dort findet Obtainium die Updates.
+#
+# Auslöser: Änderung der Datei VERSION auf main, oder manuell unter
+# Actions → Release → "Run workflow".
 name: Release
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: [main]
+    paths: [VERSION]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -21,15 +25,21 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Version aus dem Tag ableiten
+      - name: Version aus der Datei VERSION lesen
         id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          NAME="${GITHUB_REF_NAME#v}"
+          NAME="$(tr -d '[:space:]' < VERSION)"
           if ! [[ "$NAME" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-            echo "Tag muss das Format vX.Y.Z haben, ist aber $GITHUB_REF_NAME" >&2
+            echo "VERSION muss das Format X.Y.Z haben, ist aber '$NAME'" >&2
             exit 1
           fi
           CODE=$(( BASH_REMATCH[1] * 10000 + BASH_REMATCH[2] * 100 + BASH_REMATCH[3] ))
+          if gh release view "v$NAME" > /dev/null 2>&1; then
+            echo "Release v$NAME existiert bereits – bitte VERSION erhöhen." >&2
+            exit 1
+          fi
           echo "name=$NAME" >> "$GITHUB_OUTPUT"
           echo "code=$CODE" >> "$GITHUB_OUTPUT"
 
@@ -65,7 +75,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
+          gh release create "v${{ steps.version.outputs.name }}" \
             "first-light-${{ steps.version.outputs.name }}.apk" \
+            --target "$GITHUB_SHA" \
             --title "First Light ${{ steps.version.outputs.name }}" \
             --generate-notes
