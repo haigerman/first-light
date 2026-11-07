@@ -22,10 +22,17 @@ import android.os.SystemClock
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlin.math.exp
 
 /**
  * Spielt das Musikstück ab und steigert die Lautstärke:
- * Linearer Anstieg von 0 % auf 100 % über genau eine Länge des Musikstücks.
+ * Exponentieller Anstieg (Basis e) von 0 % auf 100 % über genau eine Länge des Musikstücks:
+ *
+ *     L(x) = (e^(k·x) − 1) / (e^k − 1),   x = vergangene Zeit / Länge des Stücks ∈ [0, 1]
+ *
+ * Die „− 1“ sorgt dafür, dass genau bei 0 % begonnen und genau bei 100 % geendet wird.
+ * Mit k = [RAMP_STEEPNESS] = 4 ist es bei einem 2:32-Stück nach 1 Minute erst ca. 7 %,
+ * danach steigt die Lautstärke immer schneller.
  * Danach läuft das Stück in Schleife weiter und bleibt bei 100 %.
  * Die Lautstärke wird alle [TICK_MS] nachgeführt, damit keine Stufen hörbar sind.
  */
@@ -37,6 +44,8 @@ class AlarmService : Service() {
         /** Ersatzdauer, falls das Stück keine (sinnvolle) Länge meldet, z. B. sehr kurze System-Töne. */
         const val FALLBACK_RAMP_MS = 150_000L
         private const val MIN_RAMP_MS = 30_000L
+        /** Steilheit k der Exponentialkurve: größer = länger leise, am Ende steiler. */
+        const val RAMP_STEEPNESS = 4.0
         private const val TICK_MS = 100L
         private const val CHANNEL_ID = "alarm"
         private const val NOTIFICATION_ID = 42
@@ -192,13 +201,14 @@ class AlarmService : Service() {
         RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
             ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
 
-    /** Setzt die Lautstärke passend zur vergangenen Zeit und gibt den Anteil (0…1) zurück. */
+    /** Setzt die Lautstärke passend zur vergangenen Zeit und gibt den Zeitanteil x (0…1) zurück. */
     private fun applyVolume(): Float {
         val elapsed = SystemClock.elapsedRealtime() - rampStart
-        val v = (elapsed.toFloat() / rampDuration).coerceIn(0f, 1f)
+        val x = (elapsed.toDouble() / rampDuration).coerceIn(0.0, 1.0)
+        val v = ((exp(RAMP_STEEPNESS * x) - 1.0) / (exp(RAMP_STEEPNESS) - 1.0)).toFloat()
         player?.setVolume(v, v)
         _volumePercent.value = (v * 100).toInt()
-        return v
+        return x.toFloat()
     }
 
     override fun onDestroy() {

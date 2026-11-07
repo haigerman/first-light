@@ -157,7 +157,8 @@ fun WeckerScreen() {
         HorizontalDivider(Modifier.padding(vertical = 8.dp))
 
         Text(
-            "Die Lautstärke steigt während des ersten Durchlaufs des Musikstücks gleichmäßig von 0 % auf 100 % " +
+            "Die Lautstärke steigt während des ersten Durchlaufs des Musikstücks von 0 % auf 100 % – " +
+                "erst ganz langsam, dann immer schneller – " +
                 "und bleibt danach bei 100 %.",
             style = MaterialTheme.typography.bodySmall
         )

@@ -7,7 +7,7 @@ Android-Wecker-App, die zur eingestellten Zeit ein Musikstück abspielt und die 
 ## Funktionen
 
 - **Weckzeit** im 24-Stunden-Format, einmalig oder täglich wiederholt
-- **Sanfter Lautstärkeanstieg:** gleichmäßig (linear) von 0 % auf 100 % über die Länge des Musikstücks (Standardstück: 2:32), danach in Schleife bei 100 %
+- **Sanfter Lautstärkeanstieg:** exponentiell (Basis e) von 0 % auf 100 % über die Länge des Musikstücks (Standardstück: 2:32) – erst ganz langsam (nach 1 Minute ca. 7 %), dann immer schneller; danach in Schleife bei 100 %
 - **Eigenes Musikstück** (beliebige Audiodatei), sonst das mitgelieferte Stück „First Light on the Water“
 - **Persönliche Begrüßung:** „Guten Morgen, ‹Name› ☀️“ bzw. „Guten Morgen!“ ohne Namen
 - **Weckbildschirm über dem Sperrbildschirm** mit
@@ -73,7 +73,7 @@ Wecker sind im „Nicht stören“-Modus standardmäßig erlaubt. Sind Wecker do
 | `BootReceiver.kt` | Stellt Wecker nach Neustart/Zeitänderung neu |
 | `AlarmPrefs.kt` | Gespeicherte Einstellungen |
 
-Die Lautstärke-Parameter stehen als Konstanten in `AlarmService.kt` (`FALLBACK_RAMP_MS` für Stücke ohne verwertbare Länge), die Schlummerdauer in `AlarmScheduler.kt` (`SNOOZE_MINUTES`).
+Die Lautstärke-Parameter stehen als Konstanten in `AlarmService.kt` (`RAMP_STEEPNESS` für die Steilheit der Kurve, `FALLBACK_RAMP_MS` für Stücke ohne verwertbare Länge), die Schlummerdauer in `AlarmScheduler.kt` (`SNOOZE_MINUTES`).
 
 ## Installation mit Obtainium
 
