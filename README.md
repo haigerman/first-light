@@ -1,6 +1,6 @@
 <img src="docs/icon.png" width="128" alt="App-Icon: Sonnenaufgang über dem Wasser">
 
-# Ocean Breeze Clock
+# First Light
 
 Android-Wecker-App, die zur eingestellten Zeit ein Musikstück abspielt und die Lautstärke ganz langsam steigert – für ein sanftes Aufwachen.
 

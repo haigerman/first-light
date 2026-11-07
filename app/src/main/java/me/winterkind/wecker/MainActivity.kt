@@ -103,7 +103,7 @@ fun WeckerScreen() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text("Ocean Breeze Clock", Modifier.weight(1f), style = MaterialTheme.typography.headlineMedium)
+            Text("First Light", Modifier.weight(1f), style = MaterialTheme.typography.headlineMedium)
             IconButton(onClick = { context.startActivity(Intent(context, SettingsActivity::class.java)) }) {
                 Icon(Icons.Filled.Settings, contentDescription = "Einstellungen")
             }
