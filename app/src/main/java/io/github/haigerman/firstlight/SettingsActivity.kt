@@ -1,4 +1,4 @@
-package me.winterkind.wecker
+package io.github.haigerman.firstlight
 
 import android.content.Intent
 import android.content.res.Configuration

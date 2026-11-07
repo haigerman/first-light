@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "me.winterkind.wecker"
+    namespace = "io.github.haigerman.firstlight"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "me.winterkind.wecker"
+        applicationId = "io.github.haigerman.firstlight"
         minSdk = 26
         targetSdk = 35
         // Beim Release vom Git-Tag gesetzt: ./gradlew assembleRelease -PversionName=1.2.3 -PversionCode=10203

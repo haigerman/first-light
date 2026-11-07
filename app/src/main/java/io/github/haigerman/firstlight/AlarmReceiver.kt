@@ -1,4 +1,4 @@
-package me.winterkind.wecker
+package io.github.haigerman.firstlight
 
 import android.content.BroadcastReceiver
 import android.content.Context

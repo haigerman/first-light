@@ -1,4 +1,4 @@
-package me.winterkind.wecker
+package io.github.haigerman.firstlight
 
 import android.app.AlarmManager
 import android.app.PendingIntent

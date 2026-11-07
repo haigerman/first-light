@@ -1,4 +1,4 @@
-package me.winterkind.wecker
+package io.github.haigerman.firstlight
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -32,8 +32,8 @@ import kotlinx.coroutines.flow.StateFlow
 class AlarmService : Service() {
 
     companion object {
-        const val ACTION_STOP = "me.winterkind.wecker.STOP"
-        const val ACTION_SNOOZE = "me.winterkind.wecker.SNOOZE"
+        const val ACTION_STOP = "io.github.haigerman.firstlight.STOP"
+        const val ACTION_SNOOZE = "io.github.haigerman.firstlight.SNOOZE"
         /** Ersatzdauer, falls das Stück keine (sinnvolle) Länge meldet, z. B. sehr kurze System-Töne. */
         const val FALLBACK_RAMP_MS = 150_000L
         private const val MIN_RAMP_MS = 30_000L
