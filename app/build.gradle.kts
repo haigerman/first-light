@@ -12,13 +12,29 @@ android {
         applicationId = "me.winterkind.wecker"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        // Beim Release vom Git-Tag gesetzt: ./gradlew assembleRelease -PversionName=1.2.3 -PversionCode=10203
+        versionCode = (project.findProperty("versionCode") as String?)?.toInt() ?: 1
+        versionName = (project.findProperty("versionName") as String?) ?: "1.0.0"
+    }
+
+    // Release-Signatur kommt aus Umgebungsvariablen (GitHub Actions Secrets).
+    // Ohne sie wird die Release-APK unsigniert gebaut.
+    val keystorePath: String? = System.getenv("SIGNING_KEYSTORE_PATH")
+    signingConfigs {
+        if (keystorePath != null) {
+            create("release") {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("SIGNING_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("SIGNING_KEY_ALIAS")
+                keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            if (keystorePath != null) signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {

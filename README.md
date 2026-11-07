@@ -74,3 +74,24 @@ Wecker sind im „Nicht stören“-Modus standardmäßig erlaubt. Sind Wecker do
 | `AlarmPrefs.kt` | Gespeicherte Einstellungen |
 
 Die Lautstärke-Parameter stehen als Konstanten in `AlarmService.kt` (`FALLBACK_RAMP_MS` für Stücke ohne verwertbare Länge), die Schlummerdauer in `AlarmScheduler.kt` (`SNOOZE_MINUTES`).
+
+## Installation mit Obtainium
+
+[Obtainium](https://github.com/ImranR98/Obtainium) installiert die App direkt aus den GitHub Releases und meldet neue Versionen:
+
+1. Obtainium öffnen → **App hinzufügen**
+2. URL eintragen: `https://github.com/haigerman/first-light`
+3. **Hinzufügen** → **Installieren**
+
+## Neue Version veröffentlichen
+
+Jeder Tag im Format `vX.Y.Z` startet den Workflow `.github/workflows/release.yml`. Er baut eine signierte APK und veröffentlicht sie als GitHub Release:
+
+```bash
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+Die Versionsnummer der App wird aus dem Tag abgeleitet (`v1.2.3` → versionName `1.2.3`, versionCode `10203`).
+
+Zum Signieren braucht das Repo diese Actions-Secrets: `SIGNING_KEYSTORE_BASE64`, `SIGNING_KEYSTORE_PASSWORD`, `SIGNING_KEY_ALIAS`, `SIGNING_KEY_PASSWORD`. Der Schlüssel selbst gehört **nie** ins Repository.

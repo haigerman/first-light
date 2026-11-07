@@ -6,3 +6,7 @@ local.properties
 *.iml
 *.apk
 *.aab
+*.jks
+*.keystore
+*.p12
+signatur-backup/
