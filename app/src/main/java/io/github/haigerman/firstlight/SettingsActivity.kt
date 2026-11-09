@@ -115,11 +115,7 @@ fun SettingsScreen(onBack: () -> Unit) {
 
             // --- Wecksound ---
             Text("Dein Sound zum Start in den Tag", style = MaterialTheme.typography.titleMedium)
-            Text(
-                "Wenn Du kein eigenes Musikstück auswählst, weckt dich der Wecker mit sanften Klängen.",
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
-            )
+            Spacer(Modifier.height(8.dp))
             Column(Modifier.selectableGroup()) {
                 SoundOption("First Light (Standard)", null, sound == AlarmPrefs.Sound.FIRST_LIGHT) {
                     choose(AlarmPrefs.Sound.FIRST_LIGHT)
