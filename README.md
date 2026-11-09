@@ -8,7 +8,7 @@ Android-Wecker-App, die zur eingestellten Zeit ein Musikstück abspielt und die 
 
 - **Weckzeit** im 24-Stunden-Format, einmalig oder täglich wiederholt
 - **Sanfter Lautstärkeanstieg:** exponentiell (Basis e) von 0 % auf 100 % über die Länge des Musikstücks (Standardstück: 2:32) – erst ganz langsam (nach 1 Minute ca. 12 %), dann immer schneller; danach in Schleife bei 100 %
-- **Eigenes Musikstück** (beliebige Audiodatei), sonst das mitgelieferte Stück „First Light on the Water“
+- **Dein Sound zum Start in den Tag:** „First Light“ (Standard), „Vogelgesang“ oder eigene Musik (beliebige Audiodatei)
 - **Persönliche Begrüßung:** „Guten Morgen, ‹Name› ☀️“ bzw. „Guten Morgen!“ ohne Namen
 - **Weckbildschirm über dem Sperrbildschirm** mit
   - **Schlummern (+7 Min.)** – klingelt nach 7 Minuten erneut, wieder ab 0 %
@@ -16,7 +16,7 @@ Android-Wecker-App, die zur eingestellten Zeit ein Musikstück abspielt und die 
 - Beide Aktionen auch direkt in der Benachrichtigung
 - Klingelt auch, wenn das Handy lautlos ist (eigener Wecker-Audiokanal)
 - Wecker und Schlummern überstehen Neustart, App-Update und Zeitumstellung
-- Einstellungen (Zahnrad oben rechts): Name und Musikstück
+- Einstellungen (Zahnrad oben rechts): Name und Wecksound
 - „Jetzt testen“ zum Ausprobieren des Weckablaufs
 
 Mindestens Android 8.0 (API 26), Ziel-API 35.
@@ -65,7 +65,7 @@ Wecker sind im „Nicht stören“-Modus standardmäßig erlaubt. Sind Wecker do
 | Datei | Aufgabe |
 |---|---|
 | `MainActivity.kt` | Hauptbildschirm: Weckzeit, An/Aus, Wiederholung, Test |
-| `SettingsActivity.kt` | Einstellungen: Name, Musikstück |
+| `SettingsActivity.kt` | Einstellungen: Name, Wecksound |
 | `AlarmActivity.kt` | Weckbildschirm mit Schlummern / Ausschalten |
 | `AlarmService.kt` | Wiedergabe und Lautstärkeanstieg (Vordergrunddienst) |
 | `AlarmScheduler.kt` | Stellt Wecker und Schlummer-Wecker über den `AlarmManager` |

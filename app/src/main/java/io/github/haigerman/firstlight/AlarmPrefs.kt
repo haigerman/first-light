@@ -24,6 +24,12 @@ class AlarmPrefs(context: Context) {
         get() = prefs.getBoolean("daily", true)
         set(v) = prefs.edit().putBoolean("daily", v).apply()
 
+    /** Gewählter Wecksound. Ohne Eintrag: eigene Musik, falls früher eine gewählt wurde, sonst First Light. */
+    var sound: Sound
+        get() = prefs.getString("sound", null)?.let { runCatching { Sound.valueOf(it) }.getOrNull() }
+            ?: if (musicUri != null) Sound.CUSTOM else Sound.FIRST_LIGHT
+        set(v) = prefs.edit().putString("sound", v.name).apply()
+
     var musicUri: Uri?
         get() = prefs.getString("musicUri", null)?.let(Uri::parse)
         set(v) = prefs.edit().putString("musicUri", v?.toString()).apply()
@@ -43,6 +49,8 @@ class AlarmPrefs(context: Context) {
 
     /** Begrüßung beim Wecken – mit Namen, falls einer hinterlegt ist. */
     fun greeting(): String = greetingFor(userName)
+
+    enum class Sound { FIRST_LIGHT, BIRDSONG, CUSTOM }
 
     companion object {
         fun greetingFor(name: String): String =

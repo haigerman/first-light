@@ -147,9 +147,15 @@ class AlarmService : Service() {
         originalStreamVolume = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
         setAlarmStreamVolume(audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM))
 
-        val chosen = AlarmPrefs(this).musicUri
+        val prefs = AlarmPrefs(this)
+        val chosen = when (prefs.sound) {
+            AlarmPrefs.Sound.FIRST_LIGHT -> rawUri(R.raw.first_light)
+            AlarmPrefs.Sound.BIRDSONG -> rawUri(R.raw.birdsong)
+            AlarmPrefs.Sound.CUSTOM -> prefs.musicUri
+        }
         player = createPlayer(chosen)
-            ?: createPlayer(defaultMusicUri())   // mitgeliefertes „First Light“
+            ?: createPlayer(rawUri(R.raw.first_light))  // z. B. eigene Datei gelöscht
+
             ?: createPlayer(fallbackUri())       // Notfall: System-Weckton
         if (player == null) {
             Log.e(TAG, "Keine abspielbare Audiodatei gefunden")
@@ -194,8 +200,8 @@ class AlarmService : Service() {
         }
     }
 
-    private fun defaultMusicUri(): Uri =
-        Uri.parse("android.resource://$packageName/${R.raw.ocean_breeze}")
+    private fun rawUri(resId: Int): Uri =
+        Uri.parse("android.resource://$packageName/$resId")
 
     private fun fallbackUri(): Uri? =
         RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)

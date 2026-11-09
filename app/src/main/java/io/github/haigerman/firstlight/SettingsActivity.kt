@@ -11,13 +11,17 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -44,13 +48,31 @@ fun SettingsScreen(onBack: () -> Unit) {
 
     var name by remember { mutableStateOf(prefs.userName) }
     var musicName by remember { mutableStateOf(prefs.musicName) }
+    var sound by remember { mutableStateOf(prefs.sound) }
 
     val pickMusic = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         if (uri != null) {
+            // Berechtigung für die vorherige Datei freigeben
+            prefs.musicUri?.takeIf { it != uri }?.let { old ->
+                try {
+                    context.contentResolver.releasePersistableUriPermission(old, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                } catch (_: SecurityException) {}
+            }
             context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
             prefs.musicUri = uri
             prefs.musicName = displayName(context, uri)
             musicName = prefs.musicName
+            prefs.sound = AlarmPrefs.Sound.CUSTOM
+            sound = AlarmPrefs.Sound.CUSTOM
+        }
+    }
+
+    fun choose(s: AlarmPrefs.Sound) {
+        if (s == AlarmPrefs.Sound.CUSTOM && prefs.musicUri == null) {
+            pickMusic.launch(arrayOf("audio/*")) // erst nach Auswahl einer Datei aktiv
+        } else {
+            prefs.sound = s
+            sound = s
         }
     }
 
@@ -91,34 +113,49 @@ fun SettingsScreen(onBack: () -> Unit) {
 
             HorizontalDivider(Modifier.padding(vertical = 24.dp))
 
-            // --- Musik ---
-            Text("Musikstück", style = MaterialTheme.typography.titleMedium)
-            Text(
-                musicName ?: "First Light (Standard)",
-                Modifier.padding(vertical = 8.dp)
-            )
+            // --- Wecksound ---
+            Text("Dein Sound zum Start in den Tag", style = MaterialTheme.typography.titleMedium)
             Text(
                 "Wenn Du kein eigenes Musikstück auswählst, weckt dich der Wecker mit sanften Klängen.",
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(bottom = 12.dp)
+                modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
             )
-            Row {
-                OutlinedButton(onClick = { pickMusic.launch(arrayOf("audio/*")) }) { Text("Musik auswählen") }
-                if (musicName != null) {
-                    Spacer(Modifier.width(8.dp))
-                    TextButton(onClick = {
-                        prefs.musicUri?.let { uri ->
-                            try {
-                                context.contentResolver.releasePersistableUriPermission(
-                                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                )
-                            } catch (_: SecurityException) {}
-                        }
-                        prefs.musicUri = null
-                        prefs.musicName = null
-                        musicName = null
-                    }) { Text("First Light verwenden") }
+            Column(Modifier.selectableGroup()) {
+                SoundOption("First Light (Standard)", null, sound == AlarmPrefs.Sound.FIRST_LIGHT) {
+                    choose(AlarmPrefs.Sound.FIRST_LIGHT)
                 }
+                SoundOption("Vogelgesang", null, sound == AlarmPrefs.Sound.BIRDSONG) {
+                    choose(AlarmPrefs.Sound.BIRDSONG)
+                }
+                SoundOption(
+                    "Eigene Musik",
+                    musicName ?: "Noch keine Datei gewählt",
+                    sound == AlarmPrefs.Sound.CUSTOM
+                ) { choose(AlarmPrefs.Sound.CUSTOM) }
+            }
+            OutlinedButton(
+                onClick = { pickMusic.launch(arrayOf("audio/*")) },
+                modifier = Modifier.padding(start = 48.dp, top = 4.dp)
+            ) { Text(if (musicName == null) "Datei auswählen" else "Andere Datei wählen") }
+        }
+    }
+}
+
+@Composable
+private fun SoundOption(title: String, subtitle: String?, selected: Boolean, onSelect: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .selectable(selected = selected, onClick = onSelect, role = Role.RadioButton)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(selected = selected, onClick = null)
+        Spacer(Modifier.width(12.dp))
+        Column {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            if (subtitle != null) {
+                Text(subtitle, style = MaterialTheme.typography.bodySmall)
             }
         }
     }
