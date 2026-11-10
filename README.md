@@ -9,6 +9,8 @@ Android-Wecker-App, die zur eingestellten Zeit ein Musikstück abspielt und die 
 - **Weckzeit** im 24-Stunden-Format, einmalig oder täglich wiederholt
 - **Sanfter Lautstärkeanstieg:** exponentiell (Basis e) von 0 % auf 100 % über die Länge des Musikstücks (Standardstück: 2:32) – erst ganz langsam (nach 1 Minute ca. 12 %), dann immer schneller; danach in Schleife bei 100 %
 - **Dein Sound zum Start in den Tag:** „First Light“ (Standard), „Vogelgesang“ oder eigene Musik (beliebige Audiodatei)
+- **Vogelgesang mit Verstärkung:** Hat der Vogelgesang 100 % erreicht, wird zusätzlich „First Light“ in 1 Minute linear von 0 % auf 100 % eingeblendet
+- **Automatisches Ende:** Nach 4 Minuten schaltet sich der klingelnde Wecker selbst aus (ein täglicher Wecker klingelt am nächsten Tag wieder)
 - **Persönliche Begrüßung:** „Guten Morgen, ‹Name› ☀️“ bzw. „Guten Morgen!“ ohne Namen
 - **Weckbildschirm über dem Sperrbildschirm** mit
   - **Schlummern (+7 Min.)** – klingelt nach 7 Minuten erneut, wieder ab 0 %

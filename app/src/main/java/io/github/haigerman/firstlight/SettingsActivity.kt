@@ -49,6 +49,7 @@ fun SettingsScreen(onBack: () -> Unit) {
     var name by remember { mutableStateOf(prefs.userName) }
     var musicName by remember { mutableStateOf(prefs.musicName) }
     var sound by remember { mutableStateOf(prefs.sound) }
+    var showInfo by remember { mutableStateOf(false) }
 
     val pickMusic = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         if (uri != null) {
@@ -133,6 +134,29 @@ fun SettingsScreen(onBack: () -> Unit) {
                 onClick = { pickMusic.launch(arrayOf("audio/*")) },
                 modifier = Modifier.padding(start = 48.dp, top = 4.dp)
             ) { Text(if (musicName == null) "Datei auswählen" else "Andere Datei wählen") }
+            OutlinedButton(
+                onClick = { showInfo = true },
+                modifier = Modifier.padding(start = 48.dp, top = 8.dp)
+            ) { Text("Infos") }
+
+            if (showInfo) {
+                AlertDialog(
+                    onDismissRequest = { showInfo = false },
+                    confirmButton = { TextButton(onClick = { showInfo = false }) { Text("OK") } },
+                    title = { Text("So weckt dich der Vogelgesang") },
+                    text = {
+                        Text(
+                            "Der Vogelgesang beginnt ganz leise bei 0 % und wird dann immer schneller lauter. " +
+                                "Genau am Ende des Stücks, nach knapp 3 Minuten, erreicht er 100 %.\n\n" +
+                                "Danach läuft der Vogelgesang mit voller Lautstärke weiter. Falls dich die Vögel " +
+                                "nicht wecken, wird zusätzlich „First Light“ eingeblendet: Es wird innerhalb einer " +
+                                "Minute gleichmäßig von 0 % auf 100 % lauter.\n\n" +
+                                "Nach ${AlarmService.MAX_RING_MS / 60_000} Minuten schaltet sich der Wecker " +
+                                "automatisch aus."
+                        )
+                    }
+                )
+            }
         }
     }
 }

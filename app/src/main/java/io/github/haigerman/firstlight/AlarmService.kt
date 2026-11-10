@@ -34,6 +34,11 @@ import kotlin.math.exp
  * Mit k = [RAMP_STEEPNESS] = 3 ist es bei einem 2:32-Stück nach 1 Minute erst ca. 12 %,
  * danach steigt die Lautstärke immer schneller.
  * Danach läuft das Stück in Schleife weiter und bleibt bei 100 %.
+ *
+ * Sonderfall Vogelgesang: Sobald er 100 % erreicht, wird zusätzlich „First Light“
+ * eingeblendet – linear in [LAYER_FADE_MS] (1 Minute) von 0 % auf 100 %, ebenfalls in Schleife.
+ *
+ * Nach [MAX_RING_MS] (4 Minuten) verstummt der Wecker von selbst, wie bei „Ausschalten“.
  * Die Lautstärke wird alle [TICK_MS] nachgeführt, damit keine Stufen hörbar sind.
  */
 class AlarmService : Service() {
@@ -46,6 +51,10 @@ class AlarmService : Service() {
         private const val MIN_RAMP_MS = 30_000L
         /** Steilheit k der Exponentialkurve: größer = länger leise, am Ende steiler. */
         const val RAMP_STEEPNESS = 3.0
+        /** Dauer der linearen Einblendung von „First Light“ beim Vogelgesang. */
+        const val LAYER_FADE_MS = 60_000L
+        /** Nach dieser Zeit schaltet sich der klingelnde Wecker selbst aus. */
+        const val MAX_RING_MS = 240_000L
         private const val TICK_MS = 100L
         private const val CHANNEL_ID = "alarm"
         private const val NOTIFICATION_ID = 42
@@ -66,6 +75,10 @@ class AlarmService : Service() {
 
     private val handler = Handler(Looper.getMainLooper())
     private var player: MediaPlayer? = null
+    /** Beim Vogelgesang: zusätzlich eingeblendetes „First Light“. */
+    private var layerPlayer: MediaPlayer? = null
+    private var layerStart = 0L
+    private var isBirdsong = false
     private lateinit var audioManager: AudioManager
     private var originalStreamVolume: Int? = null
     private var rampStart = 0L
@@ -73,9 +86,20 @@ class AlarmService : Service() {
 
     private val rampStep = object : Runnable {
         override fun run() {
-            val fraction = applyVolume()
-            if (fraction < 1f) handler.postDelayed(this, TICK_MS)
+            val mainDone = applyVolume() >= 1f
+            if (mainDone && isBirdsong && layerPlayer == null) startLayer()
+            val layerDone = applyLayerVolume()
+            val waitingForLayer = isBirdsong && layerPlayer == null // Einblendung konnte nicht starten
+            if (!mainDone || (isBirdsong && !layerDone && !waitingForLayer)) {
+                handler.postDelayed(this, TICK_MS)
+            }
         }
+    }
+
+    /** Automatisches Ende nach [MAX_RING_MS]. */
+    private val autoStop = Runnable {
+        Log.i(TAG, "Wecker nach ${MAX_RING_MS / 60_000} Minuten automatisch beendet")
+        stopSelf()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -142,7 +166,7 @@ class AlarmService : Service() {
     private fun startPlayback() {
         audioManager = getSystemService(AudioManager::class.java)
         // Wecker-Lautstärke des Geräts für die Dauer des Alarms auf Maximum,
-        // die eigentliche Lautstärke (5 % … 100 %) wird über den Player geregelt.
+        // die eigentliche Lautstärke (0 % … 100 %) wird über den Player geregelt.
         // So sind feine 1-%-Schritte möglich, obwohl der Systemregler nur ~7–15 Stufen hat.
         originalStreamVolume = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
         setAlarmStreamVolume(audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM))
@@ -154,9 +178,9 @@ class AlarmService : Service() {
             AlarmPrefs.Sound.CUSTOM -> prefs.musicUri
         }
         player = createPlayer(chosen)
-            ?: createPlayer(rawUri(R.raw.first_light))  // z. B. eigene Datei gelöscht
-
-            ?: createPlayer(fallbackUri())       // Notfall: System-Weckton
+        isBirdsong = player != null && prefs.sound == AlarmPrefs.Sound.BIRDSONG
+        if (player == null) player = createPlayer(rawUri(R.raw.first_light)) // z. B. eigene Datei gelöscht
+        if (player == null) player = createPlayer(fallbackUri())             // Notfall: System-Weckton
         if (player == null) {
             Log.e(TAG, "Keine abspielbare Audiodatei gefunden")
             stopSelf()
@@ -168,6 +192,24 @@ class AlarmService : Service() {
         applyVolume()
         player?.start()
         handler.postDelayed(rampStep, TICK_MS)
+        handler.postDelayed(autoStop, MAX_RING_MS)
+    }
+
+    /** Vogelgesang hat 100 % erreicht: „First Light“ dazu einblenden (beginnt bei 0 %). */
+    private fun startLayer() {
+        layerPlayer = createPlayer(rawUri(R.raw.first_light))?.apply {
+            setVolume(0f, 0f)
+            start()
+        }
+        layerStart = SystemClock.elapsedRealtime()
+    }
+
+    /** Lineare Einblendung von „First Light“; gibt true zurück, wenn 100 % erreicht sind. */
+    private fun applyLayerVolume(): Boolean {
+        val layer = layerPlayer ?: return false
+        val v = ((SystemClock.elapsedRealtime() - layerStart).toFloat() / LAYER_FADE_MS).coerceIn(0f, 1f)
+        layer.setVolume(v, v)
+        return v >= 1f
     }
 
     private fun createPlayer(uri: Uri?): MediaPlayer? {
@@ -224,6 +266,11 @@ class AlarmService : Service() {
             release()
         }
         player = null
+        layerPlayer?.run {
+            try { stop() } catch (_: IllegalStateException) {}
+            release()
+        }
+        layerPlayer = null
         originalStreamVolume?.let {
             setAlarmStreamVolume(it)
         }

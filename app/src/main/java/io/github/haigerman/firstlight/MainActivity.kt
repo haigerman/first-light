@@ -159,7 +159,8 @@ fun WeckerScreen() {
         Text(
             "Die Lautstärke steigt während des ersten Durchlaufs des Musikstücks von 0 % auf 100 % – " +
                 "erst ganz langsam, dann immer schneller – " +
-                "und bleibt danach bei 100 %.",
+                "und bleibt danach bei 100 %. Nach ${AlarmService.MAX_RING_MS / 60_000} Minuten " +
+                "schaltet sich der Wecker automatisch aus.",
             style = MaterialTheme.typography.bodySmall
         )
 
