@@ -11,6 +11,7 @@ class AlarmReceiver : BroadcastReceiver() {
         if (intent.getBooleanExtra(AlarmScheduler.EXTRA_SNOOZE, false)) {
             // Schlummerzeit abgelaufen: erneut klingeln, regulären Wecker nicht anfassen
             prefs.snoozeUntil = 0L
+            NextAlarmNotification.refresh(context)
             context.startForegroundService(Intent(context, AlarmService::class.java))
             return
         }

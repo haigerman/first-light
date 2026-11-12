@@ -93,6 +93,7 @@ fun WeckerScreen() {
 
     val notifPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         hasNotif = it
+        if (it) NextAlarmNotification.refresh(context)
     }
 
     Column(

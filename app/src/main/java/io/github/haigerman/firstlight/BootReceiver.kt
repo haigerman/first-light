@@ -9,5 +9,6 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         AlarmScheduler.apply(context)
         AlarmScheduler.restoreSnooze(context)
+        NextAlarmNotification.refresh(context)
     }
 }

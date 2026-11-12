@@ -32,6 +32,12 @@ object AlarmScheduler {
 
     /** Stellt den Wecker gemäß den gespeicherten Einstellungen (oder löscht ihn). */
     fun apply(context: Context): Long? {
+        val next = schedule(context)
+        NextAlarmNotification.update(context, next)
+        return next
+    }
+
+    private fun schedule(context: Context): Long? {
         val prefs = AlarmPrefs(context)
         val am = context.getSystemService(AlarmManager::class.java)
         val operation = alarmIntent(context)
@@ -49,12 +55,14 @@ object AlarmScheduler {
         val triggerAt = System.currentTimeMillis() + SNOOZE_MINUTES * 60_000L
         AlarmPrefs(context).snoozeUntil = triggerAt
         armSnooze(context, triggerAt)
+        NextAlarmNotification.refresh(context)
         return triggerAt
     }
 
     fun cancelSnooze(context: Context) {
         AlarmPrefs(context).snoozeUntil = 0L
         context.getSystemService(AlarmManager::class.java).cancel(snoozeIntent(context))
+        NextAlarmNotification.refresh(context)
     }
 
     /** Nach Neustart einen noch offenen Schlummer-Wecker wiederherstellen. */
