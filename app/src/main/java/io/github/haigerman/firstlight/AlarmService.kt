@@ -8,6 +8,10 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
@@ -39,6 +43,9 @@ import kotlin.math.exp
  * eingeblendet – linear in [LAYER_FADE_MS] (1 Minute) von 0 % auf 100 %, ebenfalls in Schleife.
  *
  * Nach [MAX_RING_MS] (4 Minuten) verstummt der Wecker von selbst, wie bei „Ausschalten“.
+ *
+ * Umdrehen zum Schlummern: Wird das Handy während des Klingelns mit dem Display nach unten
+ * hingelegt (und bleibt [FLIP_HOLD_MS] so liegen), schlummert der Wecker.
  * Die Lautstärke wird alle [TICK_MS] nachgeführt, damit keine Stufen hörbar sind.
  */
 class AlarmService : Service() {
@@ -55,6 +62,12 @@ class AlarmService : Service() {
         const val LAYER_FADE_MS = 60_000L
         /** Nach dieser Zeit schaltet sich der klingelnde Wecker selbst aus. */
         const val MAX_RING_MS = 240_000L
+        /** So lange muss das Handy mit dem Display nach unten liegen, bevor geschlummert wird. */
+        private const val FLIP_HOLD_MS = 1_000L
+        /** z-Beschleunigung (m/s²), ab der das Display als „nach unten“ gilt (Schwerkraft ≈ 9,81). */
+        private const val FACE_DOWN_Z = -8.0f
+        /** z-Beschleunigung, ab der das Handy sicher nicht (mehr) mit dem Display nach unten liegt. */
+        private const val NOT_FACE_DOWN_Z = -4.0f
         private const val TICK_MS = 100L
         private const val CHANNEL_ID = "alarm"
         private const val NOTIFICATION_ID = 42
@@ -83,6 +96,28 @@ class AlarmService : Service() {
     private var originalStreamVolume: Int? = null
     private var rampStart = 0L
     private var rampDuration = FALLBACK_RAMP_MS
+
+    private var sensorManager: SensorManager? = null
+    /** Erst „scharf“, wenn das Handy einmal nicht mit dem Display nach unten lag –
+     *  sonst würde ein schon umgedreht liegendes Handy sofort schlummern. */
+    private var flipArmed = false
+    private var faceDownSince = 0L
+
+    private val flipListener = object : SensorEventListener {
+        override fun onSensorChanged(event: SensorEvent) {
+            val z = event.values[2]
+            val now = SystemClock.elapsedRealtime()
+            when {
+                z > NOT_FACE_DOWN_Z -> { flipArmed = true; faceDownSince = 0L }
+                flipArmed && z < FACE_DOWN_Z -> {
+                    if (faceDownSince == 0L) faceDownSince = now
+                    else if (now - faceDownSince >= FLIP_HOLD_MS) snoozeByFlip()
+                }
+                else -> faceDownSince = 0L
+            }
+        }
+        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+    }
 
     private val rampStep = object : Runnable {
         override fun run() {
@@ -193,6 +228,31 @@ class AlarmService : Service() {
         player?.start()
         handler.postDelayed(rampStep, TICK_MS)
         handler.postDelayed(autoStop, MAX_RING_MS)
+        startFlipDetection()
+    }
+
+    private fun startFlipDetection() {
+        val sm = getSystemService(SensorManager::class.java) ?: return
+        // Schwerkraftsensor bevorzugt (filtert Wackeln heraus), sonst Beschleunigungssensor
+        val sensor = sm.getDefaultSensor(Sensor.TYPE_GRAVITY)
+            ?: sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+            ?: return
+        flipArmed = false
+        faceDownSince = 0L
+        sm.registerListener(flipListener, sensor, SensorManager.SENSOR_DELAY_NORMAL, handler)
+        sensorManager = sm
+    }
+
+    private fun stopFlipDetection() {
+        sensorManager?.unregisterListener(flipListener)
+        sensorManager = null
+    }
+
+    private fun snoozeByFlip() {
+        Log.i(TAG, "Handy umgedreht – Schlummern")
+        stopFlipDetection()
+        if (player != null) AlarmScheduler.snooze(this)
+        stopSelf()
     }
 
     /** Vogelgesang hat 100 % erreicht: „First Light“ dazu einblenden (beginnt bei 0 %). */
@@ -260,6 +320,7 @@ class AlarmService : Service() {
     }
 
     override fun onDestroy() {
+        stopFlipDetection()
         handler.removeCallbacksAndMessages(null)
         player?.run {
             try { stop() } catch (_: IllegalStateException) {}
