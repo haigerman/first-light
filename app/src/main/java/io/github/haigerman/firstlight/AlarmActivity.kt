@@ -48,7 +48,7 @@ class AlarmActivity : ComponentActivity() {
                             modifier = Modifier.fillMaxWidth().height(96.dp)
                         ) { Text("Schlummern  +${AlarmScheduler.SNOOZE_MINUTES} Min.", fontSize = 24.sp) }
                         Text(
-                            "Tipp: Handy umdrehen zum Schlummern",
+                            "Tipp: Handy auf den Rücken drehen zum Schlummern",
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(top = 8.dp)
                         )

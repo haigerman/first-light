@@ -44,8 +44,8 @@ import kotlin.math.exp
  *
  * Nach [MAX_RING_MS] (4 Minuten) verstummt der Wecker von selbst, wie bei „Ausschalten“.
  *
- * Umdrehen zum Schlummern: Wird das Handy während des Klingelns mit dem Display nach unten
- * hingelegt (und bleibt [FLIP_HOLD_MS] so liegen), schlummert der Wecker.
+ * Umdrehen zum Schlummern: Liegt das Handy mit dem Display nach unten und wird während des
+ * Klingelns auf den Rücken gedreht (Display nach oben, [FLIP_HOLD_MS] lang), schlummert der Wecker.
  * Die Lautstärke wird alle [TICK_MS] nachgeführt, damit keine Stufen hörbar sind.
  */
 class AlarmService : Service() {
@@ -62,12 +62,12 @@ class AlarmService : Service() {
         const val LAYER_FADE_MS = 60_000L
         /** Nach dieser Zeit schaltet sich der klingelnde Wecker selbst aus. */
         const val MAX_RING_MS = 240_000L
-        /** So lange muss das Handy mit dem Display nach unten liegen, bevor geschlummert wird. */
+        /** So lange muss das Handy auf dem Rücken liegen, bevor geschlummert wird. */
         private const val FLIP_HOLD_MS = 1_000L
         /** z-Beschleunigung (m/s²), ab der das Display als „nach unten“ gilt (Schwerkraft ≈ 9,81). */
-        private const val FACE_DOWN_Z = -8.0f
-        /** z-Beschleunigung, ab der das Handy sicher nicht (mehr) mit dem Display nach unten liegt. */
-        private const val NOT_FACE_DOWN_Z = -4.0f
+        private const val FACE_DOWN_Z = -4.0f
+        /** z-Beschleunigung, ab der das Handy flach auf dem Rücken liegt (Display nach oben). */
+        private const val FACE_UP_Z = 8.0f
         private const val TICK_MS = 100L
         private const val CHANNEL_ID = "alarm"
         private const val NOTIFICATION_ID = 42
@@ -98,22 +98,22 @@ class AlarmService : Service() {
     private var rampDuration = FALLBACK_RAMP_MS
 
     private var sensorManager: SensorManager? = null
-    /** Erst „scharf“, wenn das Handy einmal nicht mit dem Display nach unten lag –
-     *  sonst würde ein schon umgedreht liegendes Handy sofort schlummern. */
+    /** Erst „scharf“, wenn das Handy einmal mit dem Display nach unten lag –
+     *  sonst würde ein schon auf dem Rücken liegendes Handy sofort schlummern. */
     private var flipArmed = false
-    private var faceDownSince = 0L
+    private var faceUpSince = 0L
 
     private val flipListener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent) {
             val z = event.values[2]
             val now = SystemClock.elapsedRealtime()
             when {
-                z > NOT_FACE_DOWN_Z -> { flipArmed = true; faceDownSince = 0L }
-                flipArmed && z < FACE_DOWN_Z -> {
-                    if (faceDownSince == 0L) faceDownSince = now
-                    else if (now - faceDownSince >= FLIP_HOLD_MS) snoozeByFlip()
+                z < FACE_DOWN_Z -> { flipArmed = true; faceUpSince = 0L }
+                flipArmed && z > FACE_UP_Z -> {
+                    if (faceUpSince == 0L) faceUpSince = now
+                    else if (now - faceUpSince >= FLIP_HOLD_MS) snoozeByFlip()
                 }
-                else -> faceDownSince = 0L
+                else -> faceUpSince = 0L
             }
         }
         override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
@@ -238,7 +238,7 @@ class AlarmService : Service() {
             ?: sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
             ?: return
         flipArmed = false
-        faceDownSince = 0L
+        faceUpSince = 0L
         sm.registerListener(flipListener, sensor, SensorManager.SENSOR_DELAY_NORMAL, handler)
         sensorManager = sm
     }

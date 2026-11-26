@@ -15,7 +15,7 @@ Android-Wecker-App, die zur eingestellten Zeit ein Musikstück abspielt und die 
 - **Persönliche Begrüßung:** „Guten Morgen, ‹Name› ☀️“ bzw. „Guten Morgen!“ ohne Namen
 - **Weckbildschirm über dem Sperrbildschirm** mit
   - **Schlummern (+7 Min.)** – klingelt nach 7 Minuten erneut, wieder ab 0 %
-  - **Umdrehen zum Schlummern:** Handy mit dem Display nach unten hinlegen (1 Sekunde) – wirkt wie „Schlummern“
+  - **Umdrehen zum Schlummern:** liegt das Handy mit dem Display nach unten, es einfach auf den Rücken drehen (Display nach oben, 1 Sekunde) – wirkt wie „Schlummern“
   - **Wecker ausschalten**
 - Beide Aktionen auch direkt in der Benachrichtigung
 - Klingelt auch, wenn das Handy lautlos ist (eigener Wecker-Audiokanal)
